@@ -10,10 +10,20 @@ import {
   Triangle,
   Pyramid,
   Pentagon,
+  Square,
+  Grid3x3,
+  Cuboid,
 } from "lucide-react";
 import { useSceneStore } from "@/app/_store/scene-store";
-import type { FormType } from "@/app/_store/scene-store";
+import type { FormType, DisplayMode } from "@/app/_store/scene-store";
 import type { LucideIcon } from "lucide-react";
+
+const displayModes: { mode: DisplayMode; label: string; icon: LucideIcon }[] =
+  [
+    { mode: "solid", label: "Solid", icon: Square },
+    { mode: "wireframe", label: "Wire", icon: Grid3x3 },
+    { mode: "solid-edges", label: "Edges", icon: Cuboid },
+  ];
 
 const forms: { type: FormType; label: string; icon: LucideIcon }[] = [
   { type: "box", label: "Box", icon: Box },
@@ -26,8 +36,14 @@ const forms: { type: FormType; label: string; icon: LucideIcon }[] = [
 ];
 
 export function Sidebar() {
-  const { sidebarOpen, toggleSidebar, selectedForm, setSelectedForm } =
-    useSceneStore();
+  const {
+    sidebarOpen,
+    toggleSidebar,
+    selectedForm,
+    setSelectedForm,
+    displayMode,
+    setDisplayMode,
+  } = useSceneStore();
 
   return (
     <>
@@ -55,6 +71,27 @@ export function Sidebar() {
                 onClick={() => setSelectedForm(type)}
                 className={`flex flex-col items-center gap-1.5 rounded-lg p-2.5 text-xs transition-colors ${
                   selectedForm === type
+                    ? "bg-neutral-700 text-white ring-1 ring-neutral-500"
+                    : "text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
+                }`}
+                aria-label={label}
+              >
+                <Icon size={20} />
+                <span className="truncate w-full text-center">{label}</span>
+              </button>
+            ))}
+          </div>
+
+          <h3 className="text-xs font-medium uppercase tracking-wider text-neutral-500 mb-3 mt-6">
+            Display
+          </h3>
+          <div className="grid grid-cols-3 gap-2">
+            {displayModes.map(({ mode, label, icon: Icon }) => (
+              <button
+                key={mode}
+                onClick={() => setDisplayMode(mode)}
+                className={`flex flex-col items-center gap-1.5 rounded-lg p-2.5 text-xs transition-colors ${
+                  displayMode === mode
                     ? "bg-neutral-700 text-white ring-1 ring-neutral-500"
                     : "text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
                 }`}

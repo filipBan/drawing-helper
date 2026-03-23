@@ -9,11 +9,15 @@ export type FormType =
   | "square-pyramid"
   | "pentagonal-pyramid";
 
+export type DisplayMode = "solid" | "wireframe" | "solid-edges";
+
 interface SceneState {
   sidebarOpen: boolean;
   toggleSidebar: () => void;
   selectedForm: FormType;
   setSelectedForm: (form: FormType) => void;
+  displayMode: DisplayMode;
+  setDisplayMode: (mode: DisplayMode) => void;
 }
 
 export const useSceneStore = create<SceneState>((set) => ({
@@ -21,4 +25,6 @@ export const useSceneStore = create<SceneState>((set) => ({
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
   selectedForm: "box",
   setSelectedForm: (form) => set({ selectedForm: form }),
+  displayMode: "solid",
+  setDisplayMode: (mode) => set({ displayMode: mode }),
 }));
