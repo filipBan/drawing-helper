@@ -75,6 +75,10 @@ export function Sidebar() {
     setLightPreset,
     ambientIntensity,
     setAmbientIntensity,
+    gridVisible,
+    toggleGrid,
+    shadowSoftness,
+    setShadowSoftness,
   } = useSceneStore();
 
   return (
@@ -241,6 +245,39 @@ export function Sidebar() {
             />
             Animate transitions
           </label>
+
+          <h3 className="text-xs font-medium uppercase tracking-wider text-neutral-500 mb-3 mt-6">
+            Scene
+          </h3>
+
+          <label className="flex items-center gap-2 text-xs text-neutral-400 cursor-pointer select-none mb-3">
+            <input
+              type="checkbox"
+              checked={gridVisible}
+              onChange={toggleGrid}
+              className="accent-neutral-500"
+            />
+            Show grid
+          </label>
+
+          <div className="mb-3">
+            <label className="flex items-center gap-2 text-xs text-neutral-400 mb-1.5">
+              Shadow softness: {shadowSoftness.toFixed(2)}
+            </label>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={shadowSoftness}
+              onChange={(e) => setShadowSoftness(Number(e.target.value))}
+              className="w-full accent-neutral-500"
+            />
+            <div className="flex justify-between text-[10px] text-neutral-600">
+              <span>Hard</span>
+              <span>Soft</span>
+            </div>
+          </div>
         </aside>
       )}
     </>

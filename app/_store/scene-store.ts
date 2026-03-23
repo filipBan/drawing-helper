@@ -60,6 +60,10 @@ interface SceneState {
   setLightPreset: (preset: LightPreset) => void;
   ambientIntensity: number;
   setAmbientIntensity: (intensity: number) => void;
+  gridVisible: boolean;
+  toggleGrid: () => void;
+  shadowSoftness: number;
+  setShadowSoftness: (softness: number) => void;
 }
 
 export const DEFAULT_CAMERA_POSITION: [number, number, number] = [3, 2, 3];
@@ -93,4 +97,8 @@ export const useSceneStore = create<SceneState>((set) => ({
   setLightPreset: (preset) => set({ lightPreset: preset }),
   ambientIntensity: 0.4,
   setAmbientIntensity: (intensity) => set({ ambientIntensity: intensity }),
+  gridVisible: true,
+  toggleGrid: () => set((s) => ({ gridVisible: !s.gridVisible })),
+  shadowSoftness: 0.5,
+  setShadowSoftness: (softness) => set({ shadowSoftness: softness }),
 }));

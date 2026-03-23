@@ -9,6 +9,7 @@ import {
   Cylinder,
   Cone,
   Edges,
+  Grid,
 } from "@react-three/drei";
 import * as THREE from "three";
 import { useSceneStore, DEFAULT_CAMERA_POSITION, LIGHT_PRESETS } from "@/app/_store/scene-store";
@@ -44,43 +45,43 @@ function SceneGeometry({
   switch (form) {
     case "box":
       return (
-        <Box args={[1, 1, 1]}>
+        <Box args={[1, 1, 1]} castShadow>
           <FormMaterial mode={mode} />
         </Box>
       );
     case "sphere":
       return (
-        <Sphere args={[0.6, 32, 32]}>
+        <Sphere args={[0.6, 32, 32]} castShadow>
           <FormMaterial mode={mode} />
         </Sphere>
       );
     case "cylinder":
       return (
-        <Cylinder args={[0.5, 0.5, 1, 32]}>
+        <Cylinder args={[0.5, 0.5, 1, 32]} castShadow>
           <FormMaterial mode={mode} />
         </Cylinder>
       );
     case "cone":
       return (
-        <Cone args={[0.5, 1, 32]}>
+        <Cone args={[0.5, 1, 32]} castShadow>
           <FormMaterial mode={mode} />
         </Cone>
       );
     case "triangular-pyramid":
       return (
-        <Cone args={[0.6, 1, 3]}>
+        <Cone args={[0.6, 1, 3]} castShadow>
           <FormMaterial mode={mode} />
         </Cone>
       );
     case "square-pyramid":
       return (
-        <Cone args={[0.6, 1, 4]}>
+        <Cone args={[0.6, 1, 4]} castShadow>
           <FormMaterial mode={mode} />
         </Cone>
       );
     case "pentagonal-pyramid":
       return (
-        <Cone args={[0.6, 1, 5]}>
+        <Cone args={[0.6, 1, 5]} castShadow>
           <FormMaterial mode={mode} />
         </Cone>
       );
@@ -238,12 +239,66 @@ export function randomCameraPosition(): [number, number, number] {
   ];
 }
 
+const GROUND_Y = -0.5;
+
+function GroundPlane() {
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, GROUND_Y, 0]} receiveShadow>
+      <planeGeometry args={[50, 50]} />
+      <meshStandardMaterial color="#2a2a2a" />
+    </mesh>
+  );
+}
+
+function SceneGrid() {
+  const gridVisible = useSceneStore((s) => s.gridVisible);
+  if (!gridVisible) return null;
+  return (
+    <Grid
+      position={[0, GROUND_Y + 0.001, 0]}
+      args={[50, 50]}
+      cellSize={1}
+      cellThickness={0.5}
+      cellColor="#444444"
+      sectionSize={5}
+      sectionThickness={1}
+      sectionColor="#555555"
+      fadeDistance={25}
+      fadeStrength={1}
+      infiniteGrid={false}
+      side={THREE.DoubleSide}
+    />
+  );
+}
+
+function ShadowLight() {
+  const lightPreset = useSceneStore((s) => s.lightPreset);
+  const shadowSoftness = useSceneStore((s) => s.shadowSoftness);
+  const shadowRadius = 1 + shadowSoftness * 9; // map 0-1 to 1-10
+
+  return (
+    <directionalLight
+      position={LIGHT_PRESETS[lightPreset]}
+      intensity={1}
+      castShadow
+      shadow-mapSize-width={2048}
+      shadow-mapSize-height={2048}
+      shadow-camera-left={-10}
+      shadow-camera-right={10}
+      shadow-camera-top={10}
+      shadow-camera-bottom={-10}
+      shadow-camera-near={0.1}
+      shadow-camera-far={50}
+      shadow-radius={shadowRadius}
+    />
+  );
+}
+
 export function SceneCanvas() {
   const sidebarOpen = useSceneStore((s) => s.sidebarOpen);
   const selectedForm = useSceneStore((s) => s.selectedForm);
   const displayMode = useSceneStore((s) => s.displayMode);
   const fov = useSceneStore((s) => s.fov);
-  const lightPreset = useSceneStore((s) => s.lightPreset);
   const ambientIntensity = useSceneStore((s) => s.ambientIntensity);
 
   return (
@@ -256,12 +311,15 @@ export function SceneCanvas() {
         <Canvas
           camera={{ position: DEFAULT_CAMERA_POSITION, fov }}
           style={{ background: "#3a3a3a" }}
+          shadows="soft"
         >
           <ambientLight intensity={ambientIntensity} />
-          <directionalLight position={LIGHT_PRESETS[lightPreset]} intensity={1} />
+          <ShadowLight />
           <RotatingGroup>
             <SceneGeometry form={selectedForm} mode={displayMode} />
           </RotatingGroup>
+          <GroundPlane />
+          <SceneGrid />
           <CameraController />
           <OrbitControls
             maxPolarAngle={Math.PI / 2}
