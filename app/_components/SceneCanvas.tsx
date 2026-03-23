@@ -93,7 +93,8 @@ const LERP_SPEED = 0.05;
 const ROTATION_LERP_SPEED = 0.08;
 
 function RotatingGroup({ children }: { children: React.ReactNode }) {
-  const groupRef = useRef<THREE.Group>(null);
+  const outerRef = useRef<THREE.Group>(null);
+  const innerRef = useRef<THREE.Group>(null);
   const rotationCommand = useSceneStore((s) => s.rotationCommand);
   const clearRotationCommand = useSceneStore((s) => s.clearRotationCommand);
   const objectRotation = useSceneStore((s) => s.objectRotation);
@@ -101,6 +102,8 @@ function RotatingGroup({ children }: { children: React.ReactNode }) {
   const targetEuler = useRef<THREE.Euler | null>(null);
   const targetQuat = useRef<THREE.Quaternion | null>(null);
   const tweening = useRef(false);
+  const bbox = useMemo(() => new THREE.Box3(), []);
+  const snapNextFrame = useRef(true);
 
   // Apply current rotation from store (handles form switch reset)
   const initialEuler = useMemo(
@@ -109,8 +112,9 @@ function RotatingGroup({ children }: { children: React.ReactNode }) {
   );
 
   useEffect(() => {
-    if (groupRef.current && !tweening.current) {
-      groupRef.current.rotation.set(...objectRotation);
+    if (innerRef.current && !tweening.current) {
+      innerRef.current.rotation.set(...objectRotation);
+      snapNextFrame.current = true;
     }
   }, [objectRotation]);
 
@@ -124,39 +128,61 @@ function RotatingGroup({ children }: { children: React.ReactNode }) {
       targetQuat.current = new THREE.Quaternion().setFromEuler(euler);
       tweening.current = true;
     } else {
-      if (groupRef.current) {
-        groupRef.current.rotation.copy(euler);
+      if (innerRef.current) {
+        innerRef.current.rotation.copy(euler);
       }
+      snapNextFrame.current = true;
       useSceneStore.setState({ objectRotation: rotationCommand.target });
     }
     clearRotationCommand();
   }, [rotationCommand, clearRotationCommand]);
 
   useFrame(() => {
-    if (!tweening.current || !targetQuat.current || !groupRef.current) return;
+    if (!innerRef.current || !outerRef.current) return;
 
-    const currentQuat = groupRef.current.quaternion.clone();
-    currentQuat.slerp(targetQuat.current, ROTATION_LERP_SPEED);
-    groupRef.current.quaternion.copy(currentQuat);
+    // Rotation tween
+    if (tweening.current && targetQuat.current) {
+      const currentQuat = innerRef.current.quaternion.clone();
+      currentQuat.slerp(targetQuat.current, ROTATION_LERP_SPEED);
+      innerRef.current.quaternion.copy(currentQuat);
 
-    if (currentQuat.angleTo(targetQuat.current) < 0.005) {
-      groupRef.current.rotation.copy(targetEuler.current!);
-      useSceneStore.setState({
-        objectRotation: [
-          targetEuler.current!.x,
-          targetEuler.current!.y,
-          targetEuler.current!.z,
-        ],
-      });
-      tweening.current = false;
-      targetQuat.current = null;
-      targetEuler.current = null;
+      if (currentQuat.angleTo(targetQuat.current) < 0.005) {
+        innerRef.current.rotation.copy(targetEuler.current!);
+        useSceneStore.setState({
+          objectRotation: [
+            targetEuler.current!.x,
+            targetEuler.current!.y,
+            targetEuler.current!.z,
+          ],
+        });
+        tweening.current = false;
+        targetQuat.current = null;
+        targetEuler.current = null;
+      }
+    }
+
+    // Dynamic Y offset — keep form sitting on ground plane
+    bbox.setFromObject(innerRef.current);
+    const targetY =
+      outerRef.current.position.y + (GROUND_Y - bbox.min.y);
+
+    if (snapNextFrame.current) {
+      outerRef.current.position.y = targetY;
+      snapNextFrame.current = false;
+    } else {
+      outerRef.current.position.y = THREE.MathUtils.lerp(
+        outerRef.current.position.y,
+        targetY,
+        ROTATION_LERP_SPEED,
+      );
     }
   });
 
   return (
-    <group ref={groupRef} rotation={initialEuler}>
-      {children}
+    <group ref={outerRef}>
+      <group ref={innerRef} rotation={initialEuler}>
+        {children}
+      </group>
     </group>
   );
 }
