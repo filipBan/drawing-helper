@@ -1,6 +1,7 @@
 "use client";
 
-import { Canvas } from "@react-three/fiber";
+import { useRef, useEffect } from "react";
+import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import {
   OrbitControls,
   Box,
@@ -9,7 +10,8 @@ import {
   Cone,
   Edges,
 } from "@react-three/drei";
-import { useSceneStore } from "@/app/_store/scene-store";
+import * as THREE from "three";
+import { useSceneStore, DEFAULT_CAMERA_POSITION } from "@/app/_store/scene-store";
 import type { FormType, DisplayMode } from "@/app/_store/scene-store";
 import { Sidebar } from "./Sidebar";
 
@@ -85,10 +87,84 @@ function SceneGeometry({
   }
 }
 
+const LERP_SPEED = 0.05;
+
+function CameraController() {
+  const fov = useSceneStore((s) => s.fov);
+  const cameraCommand = useSceneStore((s) => s.cameraCommand);
+  const clearCameraCommand = useSceneStore((s) => s.clearCameraCommand);
+  const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
+  const controls = useThree((s) => s.controls) as unknown as {
+    target: THREE.Vector3;
+    update: () => void;
+  } | null;
+
+  const targetPos = useRef<THREE.Vector3 | null>(null);
+  const tweening = useRef(false);
+  const lastCommandId = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!cameraCommand || cameraCommand.id === lastCommandId.current) return;
+    lastCommandId.current = cameraCommand.id;
+
+    const pos = new THREE.Vector3(...cameraCommand.target);
+    if (cameraCommand.animate) {
+      targetPos.current = pos;
+      tweening.current = true;
+    } else {
+      camera.position.copy(pos);
+      camera.lookAt(0, 0, 0);
+      if (controls) {
+        controls.target.set(0, 0, 0);
+        controls.update();
+      }
+    }
+    clearCameraCommand();
+  }, [cameraCommand, camera, controls, clearCameraCommand]);
+
+  useFrame(() => {
+    if (camera.fov !== fov) {
+      camera.fov = fov;
+      camera.updateProjectionMatrix();
+    }
+
+    if (tweening.current && targetPos.current) {
+      camera.position.lerp(targetPos.current, LERP_SPEED);
+      if (camera.position.distanceTo(targetPos.current) < 0.01) {
+        camera.position.copy(targetPos.current);
+        tweening.current = false;
+        targetPos.current = null;
+      }
+      camera.lookAt(0, 0, 0);
+      if (controls) {
+        controls.target.set(0, 0, 0);
+        controls.update();
+      }
+    }
+  });
+
+  return null;
+}
+
+const SPHERE_RADIUS = 4.5;
+
+export function randomCameraPosition(): [number, number, number] {
+  const theta = Math.random() * Math.PI * 2;
+  const phi = Math.acos(2 * Math.random() - 1);
+  // clamp to upper hemisphere to stay above ground
+  const absPhi = Math.min(phi, Math.PI * 0.45);
+  return [
+    SPHERE_RADIUS * Math.sin(absPhi) * Math.cos(theta),
+    SPHERE_RADIUS * Math.cos(absPhi),
+    SPHERE_RADIUS * Math.sin(absPhi) * Math.sin(theta),
+  ];
+}
+
 export function SceneCanvas() {
   const sidebarOpen = useSceneStore((s) => s.sidebarOpen);
   const selectedForm = useSceneStore((s) => s.selectedForm);
   const displayMode = useSceneStore((s) => s.displayMode);
+  const fov = useSceneStore((s) => s.fov);
 
   return (
     <div className="h-screen w-screen">
@@ -98,12 +174,13 @@ export function SceneCanvas() {
         style={{ marginLeft: sidebarOpen ? 360 : 0 }}
       >
         <Canvas
-          camera={{ position: [3, 2, 3], fov: 50 }}
+          camera={{ position: DEFAULT_CAMERA_POSITION, fov }}
           style={{ background: "#3a3a3a" }}
         >
           <ambientLight intensity={0.4} />
           <directionalLight position={[5, 5, 5]} intensity={1} />
           <SceneGeometry form={selectedForm} mode={displayMode} />
+          <CameraController />
           <OrbitControls
             maxPolarAngle={Math.PI / 2}
             makeDefault

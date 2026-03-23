@@ -13,8 +13,12 @@ import {
   Square,
   Grid3x3,
   Cuboid,
+  Shuffle,
+  RotateCcw,
+  Aperture,
 } from "lucide-react";
-import { useSceneStore } from "@/app/_store/scene-store";
+import { useSceneStore, DEFAULT_FOV, DEFAULT_CAMERA_POSITION } from "@/app/_store/scene-store";
+import { randomCameraPosition } from "./SceneCanvas";
 import type { FormType, DisplayMode } from "@/app/_store/scene-store";
 import type { LucideIcon } from "lucide-react";
 
@@ -43,6 +47,11 @@ export function Sidebar() {
     setSelectedForm,
     displayMode,
     setDisplayMode,
+    fov,
+    setFov,
+    animationEnabled,
+    toggleAnimation,
+    sendCameraCommand,
   } = useSceneStore();
 
   return (
@@ -102,6 +111,59 @@ export function Sidebar() {
               </button>
             ))}
           </div>
+
+          <h3 className="text-xs font-medium uppercase tracking-wider text-neutral-500 mb-3 mt-6">
+            Camera
+          </h3>
+
+          <div className="mb-3">
+            <label className="flex items-center gap-2 text-xs text-neutral-400 mb-1.5">
+              <Aperture size={14} />
+              FOV: {fov}°
+            </label>
+            <input
+              type="range"
+              min={15}
+              max={120}
+              value={fov}
+              onChange={(e) => setFov(Number(e.target.value))}
+              className="w-full accent-neutral-500"
+            />
+            <div className="flex justify-between text-[10px] text-neutral-600">
+              <span>15°</span>
+              <span>120°</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <button
+              onClick={() => sendCameraCommand(randomCameraPosition(), animationEnabled)}
+              className="flex items-center justify-center gap-1.5 rounded-lg p-2.5 text-xs text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 transition-colors"
+            >
+              <Shuffle size={16} />
+              Randomize
+            </button>
+            <button
+              onClick={() => {
+                sendCameraCommand(DEFAULT_CAMERA_POSITION, animationEnabled);
+                setFov(DEFAULT_FOV);
+              }}
+              className="flex items-center justify-center gap-1.5 rounded-lg p-2.5 text-xs text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 transition-colors"
+            >
+              <RotateCcw size={16} />
+              Reset
+            </button>
+          </div>
+
+          <label className="flex items-center gap-2 text-xs text-neutral-400 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={animationEnabled}
+              onChange={toggleAnimation}
+              className="accent-neutral-500"
+            />
+            Animate transitions
+          </label>
         </aside>
       )}
     </>
