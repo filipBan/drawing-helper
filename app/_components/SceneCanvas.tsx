@@ -15,6 +15,7 @@ import * as THREE from "three";
 import { useSceneStore, DEFAULT_CAMERA_POSITION, LIGHT_PRESETS } from "@/app/_store/scene-store";
 import type { FormType, DisplayMode } from "@/app/_store/scene-store";
 import { Sidebar } from "./Sidebar";
+import { useIsMobile } from "@/app/_hooks/use-is-mobile";
 
 const materialProps = { color: "#b0b0b0" } as const;
 const edgeColor = "#222222";
@@ -300,13 +301,14 @@ export function SceneCanvas() {
   const displayMode = useSceneStore((s) => s.displayMode);
   const fov = useSceneStore((s) => s.fov);
   const ambientIntensity = useSceneStore((s) => s.ambientIntensity);
+  const isMobile = useIsMobile();
 
   return (
     <div className="h-screen w-screen">
       <Sidebar />
       <div
         className="h-full transition-all duration-200"
-        style={{ marginLeft: sidebarOpen ? 360 : 0 }}
+        style={{ marginLeft: !isMobile && sidebarOpen ? 360 : 0 }}
       >
         <Canvas
           camera={{ position: DEFAULT_CAMERA_POSITION, fov }}
