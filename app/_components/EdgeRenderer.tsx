@@ -14,9 +14,11 @@ export function EdgeRenderer({
   edges,
   color,
   thickness,
-  showHidden: _showHidden = false,
+  showHidden = false,
 }: EdgeRendererProps) {
   const geomRef = useRef<THREE.BufferGeometry>(null);
+  const hiddenGeomRef = useRef<THREE.BufferGeometry>(null);
+  const hiddenLineRef = useRef<THREE.LineSegments>(null);
 
   const material = useMemo(
     () =>
@@ -24,6 +26,18 @@ export function EdgeRenderer({
         color,
         linewidth: thickness,
         depthFunc: THREE.LessEqualDepth,
+      }),
+    [color, thickness],
+  );
+
+  const hiddenMaterial = useMemo(
+    () =>
+      new THREE.LineDashedMaterial({
+        color,
+        linewidth: thickness * 0.5,
+        depthFunc: THREE.GreaterDepth,
+        dashSize: 0.05,
+        gapSize: 0.05,
       }),
     [color, thickness],
   );
@@ -38,14 +52,38 @@ export function EdgeRenderer({
   }, [edges]);
 
   useEffect(() => {
+    if (!showHidden) return;
+    const geom = hiddenGeomRef.current;
+    if (!geom) return;
+
+    const attr = new THREE.BufferAttribute(edges, 3);
+    geom.setAttribute("position", attr);
+    geom.computeBoundingSphere();
+    hiddenLineRef.current?.computeLineDistances();
+  }, [edges, showHidden]);
+
+  useEffect(() => {
     return () => {
       material.dispose();
     };
   }, [material]);
 
+  useEffect(() => {
+    return () => {
+      hiddenMaterial.dispose();
+    };
+  }, [hiddenMaterial]);
+
   return (
-    <lineSegments material={material}>
-      <bufferGeometry ref={geomRef} />
-    </lineSegments>
+    <>
+      <lineSegments material={material}>
+        <bufferGeometry ref={geomRef} />
+      </lineSegments>
+      {showHidden && (
+        <lineSegments ref={hiddenLineRef} material={hiddenMaterial}>
+          <bufferGeometry ref={hiddenGeomRef} />
+        </lineSegments>
+      )}
+    </>
   );
 }
