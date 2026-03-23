@@ -1,10 +1,33 @@
 "use client";
 
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import {
+  PanelLeftClose,
+  PanelLeftOpen,
+  Box,
+  Circle,
+  Cylinder,
+  Cone,
+  Triangle,
+  Pyramid,
+  Pentagon,
+} from "lucide-react";
 import { useSceneStore } from "@/app/_store/scene-store";
+import type { FormType } from "@/app/_store/scene-store";
+import type { LucideIcon } from "lucide-react";
+
+const forms: { type: FormType; label: string; icon: LucideIcon }[] = [
+  { type: "box", label: "Box", icon: Box },
+  { type: "sphere", label: "Sphere", icon: Circle },
+  { type: "cylinder", label: "Cylinder", icon: Cylinder },
+  { type: "cone", label: "Cone", icon: Cone },
+  { type: "triangular-pyramid", label: "Tri Pyramid", icon: Triangle },
+  { type: "square-pyramid", label: "Sq Pyramid", icon: Pyramid },
+  { type: "pentagonal-pyramid", label: "Pent Pyramid", icon: Pentagon },
+];
 
 export function Sidebar() {
-  const { sidebarOpen, toggleSidebar } = useSceneStore();
+  const { sidebarOpen, toggleSidebar, selectedForm, setSelectedForm } =
+    useSceneStore();
 
   return (
     <>
@@ -22,7 +45,26 @@ export function Sidebar() {
 
       {sidebarOpen && (
         <aside className="fixed top-0 left-0 z-40 h-full w-[360px] bg-neutral-900 border-r border-neutral-800 pt-16 px-4 pb-4 overflow-y-auto">
-          <p className="text-sm text-neutral-500">Controls will appear here</p>
+          <h3 className="text-xs font-medium uppercase tracking-wider text-neutral-500 mb-3">
+            Form
+          </h3>
+          <div className="grid grid-cols-4 gap-2">
+            {forms.map(({ type, label, icon: Icon }) => (
+              <button
+                key={type}
+                onClick={() => setSelectedForm(type)}
+                className={`flex flex-col items-center gap-1.5 rounded-lg p-2.5 text-xs transition-colors ${
+                  selectedForm === type
+                    ? "bg-neutral-700 text-white ring-1 ring-neutral-500"
+                    : "text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
+                }`}
+                aria-label={label}
+              >
+                <Icon size={20} />
+                <span className="truncate w-full text-center">{label}</span>
+              </button>
+            ))}
+          </div>
         </aside>
       )}
     </>

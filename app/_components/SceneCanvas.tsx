@@ -1,21 +1,63 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { OrbitControls, Box, Sphere, Cylinder, Cone } from "@react-three/drei";
 import { useSceneStore } from "@/app/_store/scene-store";
+import type { FormType } from "@/app/_store/scene-store";
 import { Sidebar } from "./Sidebar";
 
-function DefaultBox() {
-  return (
-    <mesh>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color="#b0b0b0" />
-    </mesh>
-  );
+const materialProps = { color: "#b0b0b0" } as const;
+
+function SceneGeometry({ form }: { form: FormType }) {
+  switch (form) {
+    case "box":
+      return (
+        <Box args={[1, 1, 1]}>
+          <meshStandardMaterial {...materialProps} />
+        </Box>
+      );
+    case "sphere":
+      return (
+        <Sphere args={[0.6, 32, 32]}>
+          <meshStandardMaterial {...materialProps} />
+        </Sphere>
+      );
+    case "cylinder":
+      return (
+        <Cylinder args={[0.5, 0.5, 1, 32]}>
+          <meshStandardMaterial {...materialProps} />
+        </Cylinder>
+      );
+    case "cone":
+      return (
+        <Cone args={[0.5, 1, 32]}>
+          <meshStandardMaterial {...materialProps} />
+        </Cone>
+      );
+    case "triangular-pyramid":
+      return (
+        <Cone args={[0.6, 1, 3]}>
+          <meshStandardMaterial {...materialProps} />
+        </Cone>
+      );
+    case "square-pyramid":
+      return (
+        <Cone args={[0.6, 1, 4]}>
+          <meshStandardMaterial {...materialProps} />
+        </Cone>
+      );
+    case "pentagonal-pyramid":
+      return (
+        <Cone args={[0.6, 1, 5]}>
+          <meshStandardMaterial {...materialProps} />
+        </Cone>
+      );
+  }
 }
 
 export function SceneCanvas() {
   const sidebarOpen = useSceneStore((s) => s.sidebarOpen);
+  const selectedForm = useSceneStore((s) => s.selectedForm);
 
   return (
     <div className="h-screen w-screen">
@@ -30,7 +72,7 @@ export function SceneCanvas() {
         >
           <ambientLight intensity={0.4} />
           <directionalLight position={[5, 5, 5]} intensity={1} />
-          <DefaultBox />
+          <SceneGeometry form={selectedForm} />
           <OrbitControls
             maxPolarAngle={Math.PI / 2}
             makeDefault
