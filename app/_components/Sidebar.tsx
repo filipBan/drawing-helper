@@ -11,8 +11,9 @@ import {
   Pyramid,
   Pentagon,
   Square,
-  Grid3x3,
-  Cuboid,
+  Layers,
+  Eye,
+  Minus,
   Shuffle,
   RotateCcw,
   Aperture,
@@ -32,8 +33,9 @@ import type { LucideIcon } from "lucide-react";
 const displayModes: { mode: DisplayMode; label: string; icon: LucideIcon }[] =
   [
     { mode: "solid", label: "Solid", icon: Square },
-    { mode: "wireframe", label: "Wire", icon: Grid3x3 },
-    { mode: "solid-edges", label: "Edges", icon: Cuboid },
+    { mode: "solid-contour", label: "Contour", icon: Layers },
+    { mode: "solid-xray", label: "X-Ray", icon: Eye },
+    { mode: "line-only", label: "Line", icon: Minus },
   ];
 
 const forms: { type: FormType; label: string; icon: LucideIcon }[] = [
@@ -106,7 +108,7 @@ function SidebarContent() {
       <h3 className="text-xs font-medium uppercase tracking-wider text-neutral-500 mb-3 mt-6">
         Display
       </h3>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-4 gap-2">
         {displayModes.map(({ mode, label, icon: Icon }) => (
           <button
             key={mode}

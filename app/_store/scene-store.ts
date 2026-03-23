@@ -9,7 +9,7 @@ export type FormType =
   | "square-pyramid"
   | "pentagonal-pyramid";
 
-export type DisplayMode = "solid" | "wireframe" | "solid-edges";
+export type DisplayMode = "solid" | "solid-contour" | "solid-xray" | "line-only";
 
 export type LightPreset =
   | "top-front"
@@ -64,6 +64,8 @@ interface SceneState {
   toggleGrid: () => void;
   shadowSoftness: number;
   setShadowSoftness: (softness: number) => void;
+  creaseAngleThreshold: number;
+  setCreaseAngleThreshold: (threshold: number) => void;
 }
 
 export const DEFAULT_CAMERA_POSITION: [number, number, number] = [3, 2, 3];
@@ -101,4 +103,6 @@ export const useSceneStore = create<SceneState>((set) => ({
   toggleGrid: () => set((s) => ({ gridVisible: !s.gridVisible })),
   shadowSoftness: 0.5,
   setShadowSoftness: (softness) => set({ shadowSoftness: softness }),
+  creaseAngleThreshold: 30,
+  setCreaseAngleThreshold: (threshold) => set({ creaseAngleThreshold: threshold }),
 }));

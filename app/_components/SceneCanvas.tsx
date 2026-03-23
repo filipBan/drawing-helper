@@ -2,38 +2,38 @@
 
 import { useRef, useEffect, useMemo } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import {
-  OrbitControls,
-  Box,
-  Sphere,
-  Cylinder,
-  Cone,
-  Edges,
-  Grid,
-} from "@react-three/drei";
+import { OrbitControls, Grid } from "@react-three/drei";
 import * as THREE from "three";
 import { useSceneStore, DEFAULT_CAMERA_POSITION, LIGHT_PRESETS } from "@/app/_store/scene-store";
 import type { FormType, DisplayMode } from "@/app/_store/scene-store";
 import { Sidebar } from "./Sidebar";
+import { EdgeRenderer } from "./EdgeRenderer";
+import { extractCreaseEdges } from "@/app/_lib/extract-crease-edges";
 import { useIsMobile } from "@/app/_hooks/use-is-mobile";
 
-const materialProps = { color: "#b0b0b0" } as const;
-const edgeColor = "#222222";
+const SURFACE_COLOR = "#b0b0b0";
+const EDGE_COLOR = "#000000";
+const EDGE_THICKNESS = 1.5;
 
-function FormMaterial({ mode }: { mode: DisplayMode }) {
-  switch (mode) {
-    case "solid":
-      return <meshStandardMaterial {...materialProps} />;
-    case "wireframe":
-      return <meshStandardMaterial {...materialProps} wireframe />;
-    case "solid-edges":
-      return (
-        <>
-          <meshStandardMaterial {...materialProps} />
-          <Edges color={edgeColor} />
-        </>
-      );
-  }
+function useFormGeometry(form: FormType): THREE.BufferGeometry {
+  return useMemo(() => {
+    switch (form) {
+      case "box":
+        return new THREE.BoxGeometry(1, 1, 1);
+      case "sphere":
+        return new THREE.SphereGeometry(0.6, 32, 32);
+      case "cylinder":
+        return new THREE.CylinderGeometry(0.5, 0.5, 1, 32);
+      case "cone":
+        return new THREE.ConeGeometry(0.5, 1, 32);
+      case "triangular-pyramid":
+        return new THREE.ConeGeometry(0.6, 1, 3);
+      case "square-pyramid":
+        return new THREE.ConeGeometry(0.6, 1, 4);
+      case "pentagonal-pyramid":
+        return new THREE.ConeGeometry(0.6, 1, 5);
+    }
+  }, [form]);
 }
 
 function SceneGeometry({
@@ -43,50 +43,37 @@ function SceneGeometry({
   form: FormType;
   mode: DisplayMode;
 }) {
-  switch (form) {
-    case "box":
-      return (
-        <Box args={[1, 1, 1]} castShadow>
-          <FormMaterial mode={mode} />
-        </Box>
-      );
-    case "sphere":
-      return (
-        <Sphere args={[0.6, 32, 32]} castShadow>
-          <FormMaterial mode={mode} />
-        </Sphere>
-      );
-    case "cylinder":
-      return (
-        <Cylinder args={[0.5, 0.5, 1, 32]} castShadow>
-          <FormMaterial mode={mode} />
-        </Cylinder>
-      );
-    case "cone":
-      return (
-        <Cone args={[0.5, 1, 32]} castShadow>
-          <FormMaterial mode={mode} />
-        </Cone>
-      );
-    case "triangular-pyramid":
-      return (
-        <Cone args={[0.6, 1, 3]} castShadow>
-          <FormMaterial mode={mode} />
-        </Cone>
-      );
-    case "square-pyramid":
-      return (
-        <Cone args={[0.6, 1, 4]} castShadow>
-          <FormMaterial mode={mode} />
-        </Cone>
-      );
-    case "pentagonal-pyramid":
-      return (
-        <Cone args={[0.6, 1, 5]} castShadow>
-          <FormMaterial mode={mode} />
-        </Cone>
-      );
-  }
+  const geometry = useFormGeometry(form);
+  const creaseAngleThreshold = useSceneStore((s) => s.creaseAngleThreshold);
+
+  const edges = useMemo(
+    () => extractCreaseEdges(geometry, creaseAngleThreshold),
+    [geometry, creaseAngleThreshold],
+  );
+
+  const showSurface = mode !== "line-only";
+  const depthOnly = mode === "line-only";
+  const showEdges = mode !== "solid";
+  const showHidden = mode === "solid-xray" || mode === "line-only";
+
+  return (
+    <>
+      <mesh geometry={geometry} castShadow>
+        <meshStandardMaterial
+          color={SURFACE_COLOR}
+          colorWrite={!depthOnly}
+        />
+      </mesh>
+      {showEdges && (
+        <EdgeRenderer
+          edges={edges}
+          color={EDGE_COLOR}
+          thickness={EDGE_THICKNESS}
+          showHidden={showHidden}
+        />
+      )}
+    </>
+  );
 }
 
 const LERP_SPEED = 0.05;
