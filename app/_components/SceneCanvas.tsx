@@ -11,7 +11,7 @@ import {
   Edges,
 } from "@react-three/drei";
 import * as THREE from "three";
-import { useSceneStore, DEFAULT_CAMERA_POSITION } from "@/app/_store/scene-store";
+import { useSceneStore, DEFAULT_CAMERA_POSITION, LIGHT_PRESETS } from "@/app/_store/scene-store";
 import type { FormType, DisplayMode } from "@/app/_store/scene-store";
 import { Sidebar } from "./Sidebar";
 
@@ -243,6 +243,8 @@ export function SceneCanvas() {
   const selectedForm = useSceneStore((s) => s.selectedForm);
   const displayMode = useSceneStore((s) => s.displayMode);
   const fov = useSceneStore((s) => s.fov);
+  const lightPreset = useSceneStore((s) => s.lightPreset);
+  const ambientIntensity = useSceneStore((s) => s.ambientIntensity);
 
   return (
     <div className="h-screen w-screen">
@@ -255,8 +257,8 @@ export function SceneCanvas() {
           camera={{ position: DEFAULT_CAMERA_POSITION, fov }}
           style={{ background: "#3a3a3a" }}
         >
-          <ambientLight intensity={0.4} />
-          <directionalLight position={[5, 5, 5]} intensity={1} />
+          <ambientLight intensity={ambientIntensity} />
+          <directionalLight position={LIGHT_PRESETS[lightPreset]} intensity={1} />
           <RotatingGroup>
             <SceneGeometry form={selectedForm} mode={displayMode} />
           </RotatingGroup>

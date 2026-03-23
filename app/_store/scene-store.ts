@@ -11,6 +11,21 @@ export type FormType =
 
 export type DisplayMode = "solid" | "wireframe" | "solid-edges";
 
+export type LightPreset =
+  | "top-front"
+  | "side"
+  | "top-down"
+  | "back-rim"
+  | "low-angle";
+
+export const LIGHT_PRESETS: Record<LightPreset, [number, number, number]> = {
+  "top-front": [3, 5, 3],
+  side: [6, 2, 0],
+  "top-down": [0, 7, 0],
+  "back-rim": [-3, 4, -3],
+  "low-angle": [3, 1, 3],
+};
+
 export type CameraCommand = {
   target: [number, number, number];
   animate: boolean;
@@ -41,6 +56,10 @@ interface SceneState {
   rotationCommand: RotationCommand | null;
   sendRotationCommand: (target: [number, number, number], animate: boolean) => void;
   clearRotationCommand: () => void;
+  lightPreset: LightPreset;
+  setLightPreset: (preset: LightPreset) => void;
+  ambientIntensity: number;
+  setAmbientIntensity: (intensity: number) => void;
 }
 
 export const DEFAULT_CAMERA_POSITION: [number, number, number] = [3, 2, 3];
@@ -70,4 +89,8 @@ export const useSceneStore = create<SceneState>((set) => ({
   sendRotationCommand: (target, animate) =>
     set({ rotationCommand: { target, animate, id: ++rotationCommandId } }),
   clearRotationCommand: () => set({ rotationCommand: null }),
+  lightPreset: "top-front",
+  setLightPreset: (preset) => set({ lightPreset: preset }),
+  ambientIntensity: 0.4,
+  setAmbientIntensity: (intensity) => set({ ambientIntensity: intensity }),
 }));

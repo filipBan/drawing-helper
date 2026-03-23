@@ -17,10 +17,15 @@ import {
   RotateCcw,
   Aperture,
   Dices,
+  Sun,
+  SunDim,
+  SunMedium,
+  Sunset,
+  Sunrise,
 } from "lucide-react";
 import { useSceneStore, DEFAULT_FOV, DEFAULT_CAMERA_POSITION } from "@/app/_store/scene-store";
 import { randomCameraPosition, randomRotation } from "./SceneCanvas";
-import type { FormType, DisplayMode } from "@/app/_store/scene-store";
+import type { FormType, DisplayMode, LightPreset } from "@/app/_store/scene-store";
 import type { LucideIcon } from "lucide-react";
 
 const displayModes: { mode: DisplayMode; label: string; icon: LucideIcon }[] =
@@ -40,6 +45,18 @@ const forms: { type: FormType; label: string; icon: LucideIcon }[] = [
   { type: "pentagonal-pyramid", label: "Pent Pyramid", icon: Pentagon },
 ];
 
+const lightPresets: {
+  preset: LightPreset;
+  label: string;
+  icon: LucideIcon;
+}[] = [
+  { preset: "top-front", label: "Top Front", icon: Sun },
+  { preset: "side", label: "Side", icon: Sunset },
+  { preset: "top-down", label: "Top Down", icon: SunMedium },
+  { preset: "back-rim", label: "Back/Rim", icon: Sunrise },
+  { preset: "low-angle", label: "Low Angle", icon: SunDim },
+];
+
 export function Sidebar() {
   const {
     sidebarOpen,
@@ -54,6 +71,10 @@ export function Sidebar() {
     toggleAnimation,
     sendCameraCommand,
     sendRotationCommand,
+    lightPreset,
+    setLightPreset,
+    ambientIntensity,
+    setAmbientIntensity,
   } = useSceneStore();
 
   return (
@@ -168,6 +189,47 @@ export function Sidebar() {
               <RotateCcw size={16} />
               Reset
             </button>
+          </div>
+
+          <h3 className="text-xs font-medium uppercase tracking-wider text-neutral-500 mb-3 mt-6">
+            Lighting
+          </h3>
+          <div className="grid grid-cols-5 gap-2 mb-3">
+            {lightPresets.map(({ preset, label, icon: Icon }) => (
+              <button
+                key={preset}
+                onClick={() => setLightPreset(preset)}
+                className={`flex flex-col items-center gap-1.5 rounded-lg p-2 text-[10px] transition-colors ${
+                  lightPreset === preset
+                    ? "bg-neutral-700 text-white ring-1 ring-neutral-500"
+                    : "text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
+                }`}
+                aria-label={label}
+              >
+                <Icon size={18} />
+                <span className="truncate w-full text-center">{label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="mb-3">
+            <label className="flex items-center gap-2 text-xs text-neutral-400 mb-1.5">
+              <SunDim size={14} />
+              Ambient: {ambientIntensity.toFixed(2)}
+            </label>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={ambientIntensity}
+              onChange={(e) => setAmbientIntensity(Number(e.target.value))}
+              className="w-full accent-neutral-500"
+            />
+            <div className="flex justify-between text-[10px] text-neutral-600">
+              <span>0</span>
+              <span>1</span>
+            </div>
           </div>
 
           <label className="flex items-center gap-2 text-xs text-neutral-400 cursor-pointer select-none">
