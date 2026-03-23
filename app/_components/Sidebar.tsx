@@ -23,6 +23,7 @@ import {
   SunMedium,
   Sunset,
   Sunrise,
+  Palette,
 } from "lucide-react";
 import { useSceneStore, DEFAULT_FOV, DEFAULT_CAMERA_POSITION } from "@/app/_store/scene-store";
 import { randomCameraPosition, randomRotation } from "./SceneCanvas";
@@ -80,6 +81,12 @@ function SidebarContent() {
     toggleGrid,
     shadowSoftness,
     setShadowSoftness,
+    edgeColor,
+    setEdgeColor,
+    edgeThickness,
+    setEdgeThickness,
+    creaseAngleThreshold,
+    setCreaseAngleThreshold,
   } = useSceneStore();
 
   return (
@@ -125,6 +132,66 @@ function SidebarContent() {
           </button>
         ))}
       </div>
+
+      {(displayMode === "solid-contour" ||
+        displayMode === "solid-xray" ||
+        displayMode === "line-only") && (
+        <>
+          <h3 className="text-xs font-medium uppercase tracking-wider text-neutral-500 mb-3 mt-6">
+            Edges
+          </h3>
+
+          <div className="mb-3">
+            <label className="flex items-center gap-2 text-xs text-neutral-400 mb-1.5">
+              <Palette size={14} />
+              Color
+            </label>
+            <input
+              type="color"
+              value={edgeColor}
+              onChange={(e) => setEdgeColor(e.target.value)}
+              className="h-8 w-10 cursor-pointer rounded border border-neutral-700 bg-transparent p-0.5"
+            />
+          </div>
+
+          <div className="mb-3">
+            <label className="flex items-center gap-2 text-xs text-neutral-400 mb-1.5">
+              <Minus size={14} />
+              Thickness: {edgeThickness.toFixed(1)}
+            </label>
+            <input
+              type="range"
+              min={0.5}
+              max={4}
+              step={0.1}
+              value={edgeThickness}
+              onChange={(e) => setEdgeThickness(Number(e.target.value))}
+              className="w-full accent-neutral-500"
+            />
+            <div className="flex justify-between text-[10px] text-neutral-600">
+              <span>0.5</span>
+              <span>4</span>
+            </div>
+          </div>
+
+          <div className="mb-3">
+            <label className="flex items-center gap-2 text-xs text-neutral-400 mb-1.5">
+              Angle threshold
+            </label>
+            <select
+              value={creaseAngleThreshold}
+              onChange={(e) => setCreaseAngleThreshold(Number(e.target.value))}
+              className="w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-xs text-neutral-300"
+            >
+              <option value={15}>15°</option>
+              <option value={30}>30°</option>
+              <option value={45}>45°</option>
+              <option value={60}>60°</option>
+              <option value={90}>90°</option>
+            </select>
+          </div>
+        </>
+      )}
 
       <h3 className="text-xs font-medium uppercase tracking-wider text-neutral-500 mb-3 mt-6">
         Object

@@ -12,8 +12,6 @@ import { extractCreaseEdges } from "@/app/_lib/extract-crease-edges";
 import { useIsMobile } from "@/app/_hooks/use-is-mobile";
 
 const SURFACE_COLOR = "#b0b0b0";
-const EDGE_COLOR = "#000000";
-const EDGE_THICKNESS = 1.5;
 
 function useFormGeometry(form: FormType): THREE.BufferGeometry {
   return useMemo(() => {
@@ -45,6 +43,8 @@ function SceneGeometry({
 }) {
   const geometry = useFormGeometry(form);
   const creaseAngleThreshold = useSceneStore((s) => s.creaseAngleThreshold);
+  const edgeColor = useSceneStore((s) => s.edgeColor);
+  const edgeThickness = useSceneStore((s) => s.edgeThickness);
 
   const edges = useMemo(
     () => extractCreaseEdges(geometry, creaseAngleThreshold),
@@ -67,8 +67,8 @@ function SceneGeometry({
       {showEdges && (
         <EdgeRenderer
           edges={edges}
-          color={EDGE_COLOR}
-          thickness={EDGE_THICKNESS}
+          color={edgeColor}
+          thickness={edgeThickness}
           showHidden={showHidden}
         />
       )}

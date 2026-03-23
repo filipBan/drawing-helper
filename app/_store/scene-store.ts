@@ -66,6 +66,10 @@ interface SceneState {
   setShadowSoftness: (softness: number) => void;
   creaseAngleThreshold: number;
   setCreaseAngleThreshold: (threshold: number) => void;
+  edgeColor: string;
+  setEdgeColor: (color: string) => void;
+  edgeThickness: number;
+  setEdgeThickness: (thickness: number) => void;
 }
 
 export const DEFAULT_CAMERA_POSITION: [number, number, number] = [3, 2, 3];
@@ -105,4 +109,8 @@ export const useSceneStore = create<SceneState>((set) => ({
   setShadowSoftness: (softness) => set({ shadowSoftness: softness }),
   creaseAngleThreshold: 30,
   setCreaseAngleThreshold: (threshold) => set({ creaseAngleThreshold: threshold }),
+  edgeColor: "#000000",
+  setEdgeColor: (color) => set({ edgeColor: color }),
+  edgeThickness: 1.5,
+  setEdgeThickness: (thickness) => set({ edgeThickness: thickness }),
 }));
