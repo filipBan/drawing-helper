@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useMemo } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import {
   OrbitControls,
@@ -88,6 +88,76 @@ function SceneGeometry({
 }
 
 const LERP_SPEED = 0.05;
+const ROTATION_LERP_SPEED = 0.08;
+
+function RotatingGroup({ children }: { children: React.ReactNode }) {
+  const groupRef = useRef<THREE.Group>(null);
+  const rotationCommand = useSceneStore((s) => s.rotationCommand);
+  const clearRotationCommand = useSceneStore((s) => s.clearRotationCommand);
+  const objectRotation = useSceneStore((s) => s.objectRotation);
+  const lastCommandId = useRef<number | null>(null);
+  const targetEuler = useRef<THREE.Euler | null>(null);
+  const targetQuat = useRef<THREE.Quaternion | null>(null);
+  const tweening = useRef(false);
+
+  // Apply current rotation from store (handles form switch reset)
+  const initialEuler = useMemo(
+    () => new THREE.Euler(...objectRotation),
+    [objectRotation],
+  );
+
+  useEffect(() => {
+    if (groupRef.current && !tweening.current) {
+      groupRef.current.rotation.set(...objectRotation);
+    }
+  }, [objectRotation]);
+
+  useEffect(() => {
+    if (!rotationCommand || rotationCommand.id === lastCommandId.current) return;
+    lastCommandId.current = rotationCommand.id;
+
+    const euler = new THREE.Euler(...rotationCommand.target);
+    if (rotationCommand.animate) {
+      targetEuler.current = euler;
+      targetQuat.current = new THREE.Quaternion().setFromEuler(euler);
+      tweening.current = true;
+    } else {
+      if (groupRef.current) {
+        groupRef.current.rotation.copy(euler);
+      }
+      useSceneStore.setState({ objectRotation: rotationCommand.target });
+    }
+    clearRotationCommand();
+  }, [rotationCommand, clearRotationCommand]);
+
+  useFrame(() => {
+    if (!tweening.current || !targetQuat.current || !groupRef.current) return;
+
+    const currentQuat = groupRef.current.quaternion.clone();
+    currentQuat.slerp(targetQuat.current, ROTATION_LERP_SPEED);
+    groupRef.current.quaternion.copy(currentQuat);
+
+    if (currentQuat.angleTo(targetQuat.current) < 0.005) {
+      groupRef.current.rotation.copy(targetEuler.current!);
+      useSceneStore.setState({
+        objectRotation: [
+          targetEuler.current!.x,
+          targetEuler.current!.y,
+          targetEuler.current!.z,
+        ],
+      });
+      tweening.current = false;
+      targetQuat.current = null;
+      targetEuler.current = null;
+    }
+  });
+
+  return (
+    <group ref={groupRef} rotation={initialEuler}>
+      {children}
+    </group>
+  );
+}
 
 function CameraController() {
   const fov = useSceneStore((s) => s.fov);
@@ -148,6 +218,14 @@ function CameraController() {
 
 const SPHERE_RADIUS = 4.5;
 
+export function randomRotation(): [number, number, number] {
+  return [
+    Math.random() * Math.PI * 2,
+    Math.random() * Math.PI * 2,
+    Math.random() * Math.PI * 2,
+  ];
+}
+
 export function randomCameraPosition(): [number, number, number] {
   const theta = Math.random() * Math.PI * 2;
   const phi = Math.acos(2 * Math.random() - 1);
@@ -179,7 +257,9 @@ export function SceneCanvas() {
         >
           <ambientLight intensity={0.4} />
           <directionalLight position={[5, 5, 5]} intensity={1} />
-          <SceneGeometry form={selectedForm} mode={displayMode} />
+          <RotatingGroup>
+            <SceneGeometry form={selectedForm} mode={displayMode} />
+          </RotatingGroup>
           <CameraController />
           <OrbitControls
             maxPolarAngle={Math.PI / 2}

@@ -17,6 +17,12 @@ export type CameraCommand = {
   id: number;
 };
 
+export type RotationCommand = {
+  target: [number, number, number];
+  animate: boolean;
+  id: number;
+};
+
 interface SceneState {
   sidebarOpen: boolean;
   toggleSidebar: () => void;
@@ -31,18 +37,24 @@ interface SceneState {
   cameraCommand: CameraCommand | null;
   sendCameraCommand: (target: [number, number, number], animate: boolean) => void;
   clearCameraCommand: () => void;
+  objectRotation: [number, number, number];
+  rotationCommand: RotationCommand | null;
+  sendRotationCommand: (target: [number, number, number], animate: boolean) => void;
+  clearRotationCommand: () => void;
 }
 
 export const DEFAULT_CAMERA_POSITION: [number, number, number] = [3, 2, 3];
 export const DEFAULT_FOV = 50;
 
 let commandId = 0;
+let rotationCommandId = 0;
 
 export const useSceneStore = create<SceneState>((set) => ({
   sidebarOpen: true,
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
   selectedForm: "box",
-  setSelectedForm: (form) => set({ selectedForm: form }),
+  setSelectedForm: (form) =>
+    set({ selectedForm: form, objectRotation: [0, 0, 0], rotationCommand: null }),
   displayMode: "solid",
   setDisplayMode: (mode) => set({ displayMode: mode }),
   fov: DEFAULT_FOV,
@@ -53,4 +65,9 @@ export const useSceneStore = create<SceneState>((set) => ({
   sendCameraCommand: (target, animate) =>
     set({ cameraCommand: { target, animate, id: ++commandId } }),
   clearCameraCommand: () => set({ cameraCommand: null }),
+  objectRotation: [0, 0, 0],
+  rotationCommand: null,
+  sendRotationCommand: (target, animate) =>
+    set({ rotationCommand: { target, animate, id: ++rotationCommandId } }),
+  clearRotationCommand: () => set({ rotationCommand: null }),
 }));

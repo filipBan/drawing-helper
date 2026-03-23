@@ -16,9 +16,10 @@ import {
   Shuffle,
   RotateCcw,
   Aperture,
+  Dices,
 } from "lucide-react";
 import { useSceneStore, DEFAULT_FOV, DEFAULT_CAMERA_POSITION } from "@/app/_store/scene-store";
-import { randomCameraPosition } from "./SceneCanvas";
+import { randomCameraPosition, randomRotation } from "./SceneCanvas";
 import type { FormType, DisplayMode } from "@/app/_store/scene-store";
 import type { LucideIcon } from "lucide-react";
 
@@ -52,6 +53,7 @@ export function Sidebar() {
     animationEnabled,
     toggleAnimation,
     sendCameraCommand,
+    sendRotationCommand,
   } = useSceneStore();
 
   return (
@@ -110,6 +112,19 @@ export function Sidebar() {
                 <span className="truncate w-full text-center">{label}</span>
               </button>
             ))}
+          </div>
+
+          <h3 className="text-xs font-medium uppercase tracking-wider text-neutral-500 mb-3 mt-6">
+            Object
+          </h3>
+          <div className="grid grid-cols-1 gap-2 mb-3">
+            <button
+              onClick={() => sendRotationCommand(randomRotation(), animationEnabled)}
+              className="flex items-center justify-center gap-1.5 rounded-lg p-2.5 text-xs text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 transition-colors"
+            >
+              <Dices size={16} />
+              Randomize Rotation
+            </button>
           </div>
 
           <h3 className="text-xs font-medium uppercase tracking-wider text-neutral-500 mb-3 mt-6">
